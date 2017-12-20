@@ -1,0 +1,14 @@
+#!/bin/bash
+
+docker build --tag ${DOCKER_REPO}:amd64-${DOCKER_TAG} .
+
+docker run --rm --privileged multiarch/qemu-user-static:register --reset
+for ARCH in arm64 arm; do
+  if [[ $ARCH = 'arm' ]]; then
+    MULTIARCH='armhf'
+  else
+    MULTIARCH=$ARCH
+  fi
+  docker build --build-arg "from=multiarch/alpine:${MULTIARCH}-v3.7" \
+               --tag ${DOCKER_REPO}:${ARCH}-${DOCKER_TAG} .
+done
