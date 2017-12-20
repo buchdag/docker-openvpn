@@ -7,8 +7,18 @@
 #        packages:
 #            - openvpn
 
-services:
-    - docker
+sudo: required
+
+language: bash
+
+env:
+  global:
+    - BASEIMAGE=kylemanna/openvpn
+    - VERSION=latest
+  matrix:
+    - ARCH=amd64 FROM=alpine:latest IMAGE=$BASEIMAGE:latest-$VERSION
+    - ARCH=arm FROM=multiarch/alpine:armhf-v3.7 IMAGE=$BASEIMAGE:$ARCH-$VERSION
+    - ARCH=arm64 FROM=multiarch/alpine:arm64-v3.7 IMAGE=$BASEIMAGE:$ARCH-$VERSION
 
 before_install:
     - docker --version
@@ -19,10 +29,10 @@ install:
 # Assist with ci test debugging:
 #   - DEBUG=1
 before_script:
-    - image="kylemanna/openvpn"
-    - docker build -t "$image" .
+    - if [ $ARCH != 'amd64' ]; then docker run --rm --privileged multiarch/qemu-user-static:register --reset; fi
+    - image="$IMAGE"
+    - docker build --build-arg from="$FROM" -t "$image" .
     - docker inspect "$image"
-    - docker run --rm "$image" openvpn --version || true # why does it return 1?
     - docker run --rm "$image" openssl version
 
 script:
