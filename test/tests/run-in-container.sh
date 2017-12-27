@@ -24,6 +24,7 @@ workdir="$containerMount/$testBase"
 newImage="$("$thisDir/image-name.sh" librarytest/run-in-container "$image--$testBase")"
 "$thisDir/docker-build.sh" "$hostMount" "$newImage" <<EOD
 FROM $image
+ENV ARCH $ARCH
 COPY dir $containerMount
 WORKDIR $workdir
 ENTRYPOINT ["$entrypoint"]

@@ -20,8 +20,15 @@ docker run -v $OVPN_DATA:/etc/openvpn --rm $IMG ovpn_genconfig -u udp://$SERV_IP
 # Ensure reneg-sec 0 in server config when two factor is enabled
 docker run -v $OVPN_DATA:/etc/openvpn --rm $IMG cat /etc/openvpn/openvpn.conf | grep 'reneg-sec 0' || abort 'reneg-sec not set to 0 in server config'
 
+if [[ $ARCH = 'arm' ]]; then
+  RSA_KEY_SIZE='512'
+elif [[ $ARCH = 'arm64' ]]; then
+  RSA_KEY_SIZE='1024'
+else
+  RSA_KEY_SIZE='2048'
+fi
 # nopass is insecure
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it -e "EASYRSA_KEY_SIZE=$RSA_KEY_SIZE" -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
 
 docker run -v $OVPN_DATA:/etc/openvpn --rm -it $IMG easyrsa build-client-full $CLIENT nopass
 

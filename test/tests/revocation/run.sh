@@ -7,7 +7,7 @@ OVPN_DATA="basic-data"
 CLIENT1="travis-client1"
 CLIENT2="travis-client2"
 IMG="$1"
-NAME="ovpn-test"
+NAME="ovpn-revocation-test"
 CLIENT_DIR="$(readlink -f "$(dirname "$BASH_SOURCE")/../../client")"
 SERV_IP="$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::' | head -n1)"
 
@@ -16,7 +16,15 @@ SERV_IP="$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::
 #
 docker volume create --name $OVPN_DATA
 docker run --rm -v $OVPN_DATA:/etc/openvpn $IMG ovpn_genconfig -u udp://$SERV_IP
-docker run --rm -v $OVPN_DATA:/etc/openvpn -it -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
+
+if [[ $ARCH = 'arm' ]]; then
+  RSA_KEY_SIZE='512'
+elif [[ $ARCH = 'arm64' ]]; then
+  RSA_KEY_SIZE='1024'
+else
+  RSA_KEY_SIZE='2048'
+fi
+docker run --rm -v $OVPN_DATA:/etc/openvpn -it -e "EASYRSA_KEY_SIZE=$RSA_KEY_SIZE" -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
 
 #
 # Fire up the server.

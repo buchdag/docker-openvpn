@@ -10,7 +10,15 @@ SERV_IP=$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::'
 # generate server config including iptables nat-ing
 docker volume create --name $OVPN_DATA
 docker run --rm -v $OVPN_DATA:/etc/openvpn $IMG ovpn_genconfig -u udp://$SERV_IP -N
-docker run -v $OVPN_DATA:/etc/openvpn --rm -it -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
+
+if [[ $ARCH = 'arm' ]]; then
+  RSA_KEY_SIZE='512'
+elif [[ $ARCH = 'arm64' ]]; then
+  RSA_KEY_SIZE='1024'
+else
+  RSA_KEY_SIZE='2048'
+fi
+docker run -v $OVPN_DATA:/etc/openvpn --rm -it -e "EASYRSA_KEY_SIZE=$RSA_KEY_SIZE" -e "EASYRSA_BATCH=1" -e "EASYRSA_REQ_CN=Travis-CI Test CA" $IMG ovpn_initpki nopass
 
 # Fire up the server
 docker run -d --name $NAME -v $OVPN_DATA:/etc/openvpn --cap-add=NET_ADMIN $IMG

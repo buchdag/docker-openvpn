@@ -8,6 +8,15 @@ SERV_IP=$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::'
 #
 ovpn_genconfig -u udp://$SERV_IP 2>/dev/null
 
+if [[ $ARCH = 'arm' ]]; then
+  RSA_KEY_SIZE='512'
+elif [[ $ARCH = 'arm64' ]]; then
+  RSA_KEY_SIZE='1024'
+else
+  RSA_KEY_SIZE='2048'
+fi
+
+export EASYRSA_KEY_SIZE=$RSA_KEY_SIZE
 export EASYRSA_BATCH=1
 export EASYRSA_REQ_CN="Travis-CI Test CA"
 
