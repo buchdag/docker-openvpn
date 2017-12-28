@@ -6,11 +6,11 @@ SERV_IP=$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::'
 #
 # Generate a simple configuration, returns nonzero on error
 #
-ovpn_genconfig -u udp://$SERV_IP 2>/dev/null
+ovpn_genconfig -u udp://$SERV_IP 
 
-if [[ $ARCH = 'arm' ]]; then
+if [[ $ARCH = 'arm32v6' ]]; then
   RSA_KEY_SIZE='512'
-elif [[ $ARCH = 'arm64' ]]; then
+elif [[ $ARCH = 'aarch64' ]]; then
   RSA_KEY_SIZE='1024'
 else
   RSA_KEY_SIZE='2048'
@@ -23,7 +23,7 @@ export EASYRSA_REQ_CN="Travis-CI Test CA"
 #
 # Initialize the certificate PKI state, returns nonzero on error
 #
-ovpn_initpki nopass 2>/dev/null
+ovpn_initpki nopass 
 
 #
 # Test back-up

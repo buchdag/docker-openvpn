@@ -1,14 +1,18 @@
 #!/bin/bash
 
-docker build --tag ${DOCKER_REPO}:amd64-${DOCKER_TAG} .
+QEMU_VERSION=v2.9.1-1
+
 
 docker run --rm --privileged multiarch/qemu-user-static:register --reset
-for ARCH in arm64 arm; do
-  if [[ $ARCH = 'arm' ]]; then
-    MULTIARCH='armhf'
-  else
-    MULTIARCH=$ARCH
-  fi
-  docker build --build-arg "from=multiarch/alpine:${MULTIARCH}-v3.7" \
+
+for i in amd64,x86_64 arm32v6,arm aarch64,aarch64; do
+  IFS=","; set -- $i; 
+  ARCH=$1
+  QEMU_ARCH=$2
+
+  curl -L https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_VERSION}/x86_64_qemu-${QEMU_ARCH}-static.tar.gz 2>/dev/null | tar xvz 
+  docker build --build-arg from="$ARCH/alpine:latest" \
+               --build-arg QEMU_ARCH="$QEMU_ARCH" \
                --tag ${DOCKER_REPO}:${ARCH}-${DOCKER_TAG} .
+
 done

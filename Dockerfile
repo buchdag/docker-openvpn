@@ -1,10 +1,16 @@
 # Original credit: https://github.com/jpetazzo/dockvpn
 
 ARG from=alpine:latest
+
 # Smallest base image
 FROM $from
 
 LABEL maintainer="Kyle Manna <kyle@kylemanna.com>"
+
+ARG QEMU_ARCH 
+ENV QEMU_ARCH ${QEMU_ARCH:-x86_64}
+
+ADD qemu-${QEMU_ARCH}-static /usr/bin/qemu-${QEMU_ARCH}-static
 
 # Testing: pamtester
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/repositories && \
@@ -13,6 +19,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing/" >> /etc/apk/reposi
     cp /usr/share/zoneinfo/UTC /etc/localtime && \
     echo "UTC" > /etc/timezone && \
     rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*
+
 
 # Needed by scripts
 ENV OPENVPN /etc/openvpn

@@ -42,9 +42,9 @@ ovpn_genconfig \
     -u udp://$SERV_IP \
     -m 1337 \
 
-if [[ $ARCH = 'arm' ]]; then
+if [[ $ARCH = 'arm32v6' ]]; then
   RSA_KEY_SIZE='512'
-elif [[ $ARCH = 'arm64' ]]; then
+elif [[ $ARCH = 'aarch64' ]]; then
   RSA_KEY_SIZE='1024'
 else
   RSA_KEY_SIZE='2048'
