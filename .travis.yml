@@ -15,29 +15,38 @@ env:
   global:
     - BASEIMAGE=kylemanna/openvpn
     - VERSION=latest
+    - QEMU_VERSION=v2.9.1-1
   matrix:
-    - ARCH=amd64 FROM=alpine:latest IMAGE=$BASEIMAGE:latest-$VERSION
-    - ARCH=arm FROM=multiarch/alpine:armhf-v3.7 IMAGE=$BASEIMAGE:$ARCH-$VERSION
-    - ARCH=arm64 FROM=multiarch/alpine:arm64-v3.7 IMAGE=$BASEIMAGE:$ARCH-$VERSION
+    - ARCH=amd64		QEMU_ARCH=x86_64
+    - ARCH=arm32v6	QEMU_ARCH=arm
+    - ARCH=aarch64	QEMU_ARCH=aarch64
+
+matrix:
+  allow_failures:
+    - env:
+      - ARCH=arm32v6	QEMU_ARCH=arm
+      - ARCH=aarch64	QEMU_ARCH=aarch64
 
 before_install:
     - docker --version
-
+   
 install:
     - git clone https://github.com/docker-library/official-images.git official-images
 
 # Assist with ci test debugging:
 #   - DEBUG=1
 before_script:
-    - if [ $ARCH != 'amd64' ]; then docker run --rm --privileged multiarch/qemu-user-static:register --reset; fi
-    - image="$IMAGE"
-    - docker build --build-arg from="$FROM" -t "$image" .
-    - docker inspect "$image"
-    - docker run --rm "$image" openssl version
+    - IMAGE="$BASEIMAGE:$ARCH-$VERSION"
+    - FROM="$ARCH/alpine:latest"
+    - wget -qO- https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_VERSION}/x86_64_qemu-${QEMU_ARCH}-static.tar.gz | tar xvz 
+    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    - docker build --build-arg from="$FROM" --build-arg QEMU_VERSION="$QEMU_VERSION" --build-arg QEMU_ARCH="$QEMU_ARCH" -t "$IMAGE" .
+    - docker inspect "$IMAGE"
+    - docker run --rm "$IMAGE" openssl version
 
 script:
-    - official-images/test/run.sh "$image"
-    - test/run.sh "$image"
+    - official-images/test/run.sh "$IMAGE"
+    - test/run.sh "$IMAGE"
 
 after_script:
     - docker images

@@ -1,9 +1,25 @@
 #!/bin/bash
 
-curl -L https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 -o ./manifest-tool
+curl -L https://github.com/estesp/manifest-tool/releases/download/v0.7.0/manifest-tool-linux-amd64 -o ./manifest-tool 2>/dev/null
 chmod +x ./manifest-tool
 
-./manifest-tool push from-args \
-  --platforms linux/amd64,linux/arm64,linux/arm \
-  --template ${DOCKER_REPO}:ARCH-${DOCKER_TAG} \
-  --target ${DOCKER_REPO}:${DOCKER_TAG}
+
+echo "image: ${DOCKER_REPO}:${DOCKER_TAG}" > manifest.yml
+echo "manifests:" >> manifest.yml
+
+for i in amd64,x86_64,amd64 arm32v6,arm,arm aarch64,aarch64,arm64; do
+  IFS=","; set -- $i; 
+  ARCH=$1
+  QEMU_ARCH=$2
+  DOC_ARCH=$3
+  cat  >> manifest.yml <<EOF
+  -
+    image: ${DOCKER_REPO}:${ARCH}-${DOCKER_TAG}
+    platform:
+      architecture: $DOC_ARCH
+      os: linux
+EOF
+done
+
+
+./manifest-tool push from-spec manifest.yml

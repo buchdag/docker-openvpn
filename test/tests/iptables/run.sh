@@ -11,9 +11,9 @@ SERV_IP=$(ip -4 -o addr show scope global  | awk '{print $4}' | sed -e 's:/.*::'
 docker volume create --name $OVPN_DATA
 docker run --rm -v $OVPN_DATA:/etc/openvpn $IMG ovpn_genconfig -u udp://$SERV_IP -N
 
-if [[ $ARCH = 'arm' ]]; then
+if [[ $ARCH = 'arm32v6' ]]; then
   RSA_KEY_SIZE='512'
-elif [[ $ARCH = 'arm64' ]]; then
+elif [[ $ARCH = 'aarch64' ]]; then
   RSA_KEY_SIZE='1024'
 else
   RSA_KEY_SIZE='2048'
